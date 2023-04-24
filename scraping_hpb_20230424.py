@@ -23,7 +23,7 @@ def get_all_kuchikomi(area_url):
     # ファイルを保存するディレクトリが無ければ作成する。
     save_dir = "./data/"
     if not Path(save_dir).exists():
-        save_dir.mkdirs(parent=True)
+        Path(save_dir).mkdir(parents=True)
 
     # pathを作成する。
     save_file_path = save_dir + f'{prefecture}_{area}.csv'
@@ -454,7 +454,7 @@ def setting_logger(prefecture, area):
     # ログを保存するディレクトリが無ければ作成する。
     log_save_dir = "./log/"
     if not Path(log_save_dir).exists():
-        Path(log_save_dir).mkdirs(parent=True)
+        Path(log_save_dir).mkdir(parents=True)
 
     # ログ周りの設定
     logger.setLevel(10)
