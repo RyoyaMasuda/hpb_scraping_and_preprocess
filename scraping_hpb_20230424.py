@@ -444,7 +444,7 @@ def get_all_kuchikomi(area_url):
             page += 1
         # 一番最後のページの次のページはないのでエラーになる。その場合処理を終了(正常終了)
         except Exception:
-            logger.info('すべての口コミを取得(正常終了)')
+            logger.info(f'{prefecture}_{area}のすべての口コミを取得(正常終了)')
             # driver.quit()でchromeを終了させる。←マルチプロセスしてる場合はやらないとダメ。
             driver.quit()
             break
