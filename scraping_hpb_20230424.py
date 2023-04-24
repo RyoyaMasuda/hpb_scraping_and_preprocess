@@ -484,6 +484,7 @@ def webdriver_options():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument('--disable-gpu')
     options.add_argument('--no-sandbox')
+    
     driver = webdriver.Chrome("/Users/masudaniwabinari/chromedriver", options=options)
     
     return driver
@@ -505,7 +506,7 @@ def next_button(driver):
             ("div.postList.taC > ul.paging.jscPagingParents > li.pa.top0.right0.afterPage")
     next_button_url = next_button.find_element_by_tag_name("a").get_attribute("href")
     driver.get(next_button_url)
-    sleep(2)
+    sleep(1)
     
 if __name__ == '__main__':
     yamaguchi_url = ['https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX451/', 'https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX506/', 'https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX453/',
@@ -526,6 +527,6 @@ if __name__ == '__main__':
 
     area_url = yamaguchi_url + hukuyama_omomichi_url + okayama_kurashiki_url + hiroshima_url
     
-    with Pool(8) as p:
+    with Pool(6) as p:
         p.map(get_all_kuchikomi, area_url)
     sys.exit()
