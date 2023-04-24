@@ -1,11 +1,36 @@
 import csv
 import sys
 import logging
+import datetime
 from time import sleep
 from pathlib import Path
 from multiprocessing import Pool
+from tqdm import tqdm
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+
+logger = logging.getLogger(__name__)
+
+# ログを保存するディレクトリが無ければ作成する。
+log_save_dir = "./log/"
+if not Path(log_save_dir).exists():
+    Path(log_save_dir).mkdir(parents=True)
+
+# ログ周りの設定
+logger.setLevel(10)
+
+formatter = logging.Formatter('時間:%(asctime)s 行:%(lineno)d ログレベル:%(levelname)s メッセージ:%(message)s')
+
+sh = logging.StreamHandler()
+sh.setFormatter(formatter)
+logger.addHandler(sh)
+
+# ログファイルの追加設定(ファイル出力)
+start_time = datetime.datetime.today().strftime('%Y-%m-%d_%H:%M:%Sstart')
+fh = logging.FileHandler(f'./log/{start_time}.log')
+logger.addHandler(fh)
+fh.setFormatter(formatter)
 
 def get_all_kuchikomi(area_url):
     
@@ -15,10 +40,8 @@ def get_all_kuchikomi(area_url):
     sleep(1)
     prefecture = driver.find_element_by_css_selector('#preContents > ol > li:nth-child(4) > a').text.replace('トップ', '')
     area = driver.find_element_by_css_selector('#preContents > ol > li:nth-child(5)').text.replace(' ', '').replace('>', '')
-    print('prefecture: ', prefecture)
-    print('area: ', area)
+    logger.info(f'{prefecture}_{area}の口コミを取得開始')
 
-    logger = setting_logger(prefecture=prefecture , area=area)
     
     # ファイルを保存するディレクトリが無ければ作成する。
     save_dir = "./data/"
@@ -99,9 +122,6 @@ def get_all_kuchikomi(area_url):
             except Exception:
                 all_salon_coupon_frame.append('')
         
-        print('all_salon_coupon_frame(クーポンの枠が現在のページにどの程度あるか): ', all_salon_coupon_frame)
-        print('all_salon_coupon_frameの数: ', len(all_salon_coupon_frame))
-        
         one_coupon_list = []
         two_coupon_list = []
         three_coupon_list = []
@@ -153,7 +173,7 @@ def get_all_kuchikomi(area_url):
                 _three_coupon_dict['coupon_price'] = ''
                 three_coupon_list.append(_three_coupon_dict)
                     
-        logger.info(f'サロン一覧[{page}]ページ目')
+        print(f'サロン一覧[{page}]ページ目')
         
         for salon_num in range(len(all_salon_a)):
             driver.get(all_salon_a_url[salon_num])
@@ -301,7 +321,7 @@ def get_all_kuchikomi(area_url):
                 driver.get(all_salon_a_url[salon_num])
                 sleep(1)
             
-            logger.info(f'No.{salon_num+1} サロン名: {salon_name} URL: {salon_url} の口コミを取得中')
+            print(f'No.{salon_num+1} サロン名: {salon_name} URL: {salon_url} の口コミを取得中')
             # 次のtry:except文で「口コミ欄がない」サロンにアクセスした際のエラーを回避
             try:
                 salon_kuchikomi = driver.find_element_by_css_selector("li.kuchikomi")
@@ -313,15 +333,10 @@ def get_all_kuchikomi(area_url):
                 try:
                     avarage_score_frame = driver.find_element_by_css_selector('#mainContents > div:nth-child(2) > div > div')
                     all_avarage_score = avarage_score_frame.find_element_by_tag_name('dd.reviewRatingMeanScore.jscReviewRatingMeanScore').text
-                    print('総合口コミの総合点の平均', all_avarage_score)
                     atmosphere_avarage = avarage_score_frame.find_element_by_tag_name('ul.reviewRatingDetailList > li:nth-child(1) > dl > dd').text
-                    print('雰囲気の平均', atmosphere_avarage)
                     attitude_avarage = avarage_score_frame.find_element_by_tag_name('ul.reviewRatingDetailList > li:nth-child(2) > dl > dd').text
-                    print("態度全体平均", attitude_avarage)
                     quality_avarage = avarage_score_frame.find_element_by_tag_name('ul.reviewRatingDetailList > li:nth-child(3) > dl > dd').text
-                    print("クオリティ全体平均", quality_avarage)
                     price_and_menu_avarage = avarage_score_frame.find_element_by_tag_name('ul.reviewRatingDetailList > li:nth-child(4) > dl > dd').text
-                    print("料金、メニュー全体平均", price_and_menu_avarage)
                 except Exception:
                     all_avarage_score = ''
                     atmosphere_avarage = ''
@@ -331,8 +346,7 @@ def get_all_kuchikomi(area_url):
                 #口コミページから口コミへのアクセスを開始する。
                 i = 1
                 while True:
-                        logger.debug(f"{i}ページの口コミを取得中")
-
+                        print(f'{salon_name}の口コミ({i}ページ目)を取得中')
                         # 以下の関数で1ページ分の口コミを取得する。
                             # 口コミの枠を取得。
                         kuchikomis = driver.find_elements_by_css_selector("li.reportCassette.mT30")
@@ -343,35 +357,23 @@ def get_all_kuchikomi(area_url):
                             # (自分用のメモ)cssセレクタ「nth-child」はサポートされていないので「nth-of-type」に書き換える。
 
                             customer_name = kuchikomi.find_element_by_css_selector("span.b").text
-                            print('顧客名: ', customer_name)
                             gender_age = kuchikomi.find_element_by_css_selector("span.mL5.fs10.fgGray").text
-                            print('性別、年齢、職業: ', gender_age)
                             posted_date = kuchikomi.find_element_by_tag_name('div.reportHeader > div.shopInfo.reportTitle.cFix > div.fr > p.fs10.fgGray').text
-                            print('投稿日: ', posted_date)
                             allover_review = kuchikomi.find_element_by_css_selector("span.mL5.mR10.fgPink").text
-                            print('総合点: ', allover_review)
                             atmosphere = kuchikomi.find_element_by_css_selector("ul > li:nth-of-type(2) > span.mL10.fgPink.b").text
-                            print('雰囲気: ', atmosphere)
                             attitude = kuchikomi.find_element_by_css_selector("ul > li:nth-of-type(3) > span.mL10.fgPink.b").text
-                            print('接客サービス: ', attitude)
                             quality = kuchikomi.find_element_by_css_selector("ul > li:nth-of-type(4) > span.mL10.fgPink.b").text
-                            print('技術、仕上がり: ', quality)
                             price_and_menu = kuchikomi.find_element_by_css_selector("ul > li:nth-of-type(5) > span.mL10.fgPink.b").text
-                            print('メニューと価格: ', price_and_menu)
                             detail = kuchikomi.find_element_by_css_selector("p.mT10.wwbw").text
-                            print('口コミ詳細: ', detail)
                             selected_coupon = kuchikomi.find_element_by_css_selector('dl.mT25 > dd.oh.zoom1 > p').text
-                            print('選んだクーポン: ', selected_coupon)
                             kind_of_menu = kuchikomi.find_element_by_css_selector('dl.mT25 > dd.oh.zoom1 > p.fs10').text
-                            print('メニューの種類: ', kind_of_menu)
+
                             # コメントへの返信の有無を入れる。
                             try:
                                 kuchikomi.find_element_by_css_selector('div.mT20.mH10.pV5.pH9.bdGray')
                                 response = '有'
                             except Exception:
                                 response = '無'
-
-                            print('返信コメントの有無: ', response)
                             
                             _csv_row = [prefecture, area, salon_name, salon_url, salon_address, salon_access, salon_cut_price, salon_seat, salon_blog_count, salon_review_count,
                                         number_of_staff, salon_one_coupon_name, salon_one_coupon_price, salon_two_coupon_name,
@@ -390,7 +392,7 @@ def get_all_kuchikomi(area_url):
                             next_button(driver=driver)
                             i += 1
                         except Exception:
-                            logger.info(f'{salon_name}の口コミ取得完了')
+                            print(f'{salon_name}の口コミ取得完了')
                             break
             
             except Exception:
@@ -446,37 +448,7 @@ def get_all_kuchikomi(area_url):
             # driver.quit()でchromeを終了させる。←マルチプロセスしてる場合はやらないとダメ。
             driver.quit()
             break
-
-def setting_logger(prefecture, area):
-    
-    logger = logging.getLogger(__name__)
-    
-    # ログを保存するディレクトリが無ければ作成する。
-    log_save_dir = "./log/"
-    if not Path(log_save_dir).exists():
-        Path(log_save_dir).mkdir(parents=True)
-
-    # ログ周りの設定
-    logger.setLevel(10)
-
-    sh = logging.StreamHandler()
-    logger.addHandler(sh)
-
-    formatter = logging.Formatter('時間:%(asctime)s 行:%(lineno)d ログレベル:%(levelname)s メッセージ:%(message)s')
-    sh.setFormatter(formatter)
-
-    # すでにログファイルがあったら削除する。
-    log_save_file = f'./log/{prefecture}_{area}.log'
-    if Path(log_save_file).exists():
-        Path(log_save_file).unlink(missing_ok=False)
-    
-    # ログファイルの追加設定(ファイル出力)
-    fh = logging.FileHandler(f'./log/{prefecture}_{area}.log')
-    logger.addHandler(fh)
-    fh.setFormatter(formatter)
-    
-    return logger
- 
+        
 # webdriverのオプション設定。
 def webdriver_options():
     options = Options()
@@ -518,15 +490,10 @@ if __name__ == '__main__':
                 'https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX270/', 'https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX448/']
     hiroshima_url = ['https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX151/', 'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX152/',
                     'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX482/','https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX584/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX157/', 'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX154/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX606/', 'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX153/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX155/','https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX596/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX156/', 'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX156/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX607/', 'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX505/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX449/']
+                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX157/','https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX505/',
+                    ]
 
     area_url = yamaguchi_url + hukuyama_omomichi_url + okayama_kurashiki_url + hiroshima_url
     
     with Pool(6) as p:
-        p.map(get_all_kuchikomi, area_url)
-    sys.exit()
+        list(tqdm(p.imap_unordered(get_all_kuchikomi, area_url), total=len(area_url)))
