@@ -9,7 +9,6 @@ from tqdm import tqdm
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-
 logger = logging.getLogger(__name__)
 
 # ログを保存するディレクトリが無ければ作成する。
@@ -470,6 +469,21 @@ def make_new_save_file(save_file_path):
                         "コメントへの返信"]
         writer = csv.writer(f, lineterminator='\n')
         writer.writerow(csv_header)
+        
+def get_area_url(prefecture_url):
+    # 例:福岡のURL → url = 'https://beauty.hotpepper.jp/svcSG/macGA/'
+    driver = webdriver_options()
+    driver.get(prefecture_url)
+    sleep(2)
+    
+    webelements = driver.find_elements_by_css_selector\
+        ('#mainContents > div.mT15 > div.cFix > div.searchAreaWrap > div.searchAreaListWrap > ul.searchAreaList > li')
+        
+    # リストの一番最初は「〜すべて」なので［:1］で省く
+    area_url_list = [webelement.find_element_by_tag_name('a').get_attribute('href') for webelement in webelements[1:]]
+    driver.quit()
+    
+    return area_url_list
 
 #「次へ」ボタンを押す関数。(次のページに移る)
 def next_button(driver):
@@ -481,19 +495,7 @@ def next_button(driver):
     sleep(1)
     
 if __name__ == '__main__':
-    yamaguchi_url = ['https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX451/', 'https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX506/', 'https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX453/',
-                'https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX508/','https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX608/','https://beauty.hotpepper.jp/svcSF/macFE/salon/sacX452/']
-    hukuyama_omomichi_url = ['https://beauty.hotpepper.jp/svcSF/macFB/salon/sacX271/', 'https://beauty.hotpepper.jp/svcSF/macFB/salon/sacX553/', 'https://beauty.hotpepper.jp/svcSF/macFB/salon/sacX272/',
-                'https://beauty.hotpepper.jp/svcSF/macFB/salon/sacX450/', 'https://beauty.hotpepper.jp/svcSF/macFB/salon/sacX602/']
-    okayama_kurashiki_url = ['https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX265/', 'https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX266/','https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX564/',
-                'https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX267/','https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX268/','https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX269/',
-                'https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX270/', 'https://beauty.hotpepper.jp/svcSF/macFC/salon/sacX448/']
-    hiroshima_url = ['https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX151/', 'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX152/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX482/','https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX584/',
-                    'https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX157/','https://beauty.hotpepper.jp/svcSF/macFA/salon/sacX505/',
-                    ]
-
-    area_url = yamaguchi_url + hukuyama_omomichi_url + okayama_kurashiki_url + hiroshima_url
+    hukuoka_each_area_list = get_area_url(prefecture_url='https://beauty.hotpepper.jp/svcSG/macGA/')
     
-    with Pool(6) as p:
-        list(tqdm(p.imap_unordered(get_all_kuchikomi, area_url), total=len(area_url)))
+    with Pool(7) as p:
+        list(tqdm(p.imap_unordered(get_all_kuchikomi, hukuoka_each_area_list), total=len(hukuoka_each_area_list)))
