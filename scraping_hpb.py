@@ -506,20 +506,8 @@ def next_button(driver):
     sleep(2)
     
 if __name__ == '__main__':
+    # 「都道府県トップ」のURLを指定する。
     prefecture_each_area_list = get_area_url(prefecture_url='https://beauty.hotpepper.jp/svcSF/macFE/')
-    
-    # shilkoku_all_area_list = \
-    #     ['https://beauty.hotpepper.jp/svcSI/macID/salon/sacX281/',# 高知市
-    #     'https://beauty.hotpepper.jp/svcSI/macIA/salon/sacX273/', 'https://beauty.hotpepper.jp/svcSI/macIA/salon/sacX274/',
-    #     'https://beauty.hotpepper.jp/svcSI/macIA/salon/sacX461/',# 香川残り
-    #     'https://beauty.hotpepper.jp/svcSI/macIB/salon/sacX275/', 'https://beauty.hotpepper.jp/svcSI/macIB/salon/sacX511/',#　徳島のこり
-    #     'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX277/', 'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX278/',
-    #     'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX579/', 'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX580/',
-    #     'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX279/', 'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX280/',
-    #     'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX459/', 'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX512/',
-    #     'https://beauty.hotpepper.jp/svcSI/macIC/salon/sacX460/']#愛媛残り
     
     with Pool(3) as p:
         list(tqdm(p.imap_unordered(get_all_kuchikomi, prefecture_each_area_list), total=len(prefecture_each_area_list)))
-    
-    # get_all_kuchikomi(hukuoka_each_area_list[0])
