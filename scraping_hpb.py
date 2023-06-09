@@ -507,7 +507,7 @@ def next_button(driver):
     
 if __name__ == '__main__':
     # 「都道府県トップ」のURLを指定する。
-    prefecture_each_area_list = get_area_url(prefecture_url='https://beauty.hotpepper.jp/svcSF/macFE/')
+    prefecture_each_area_list = get_area_url(prefecture_url='https://beauty.hotpepper.jp/svcSI/macIB/')
     
     with Pool(3) as p:
         list(tqdm(p.imap_unordered(get_all_kuchikomi, prefecture_each_area_list), total=len(prefecture_each_area_list)))
