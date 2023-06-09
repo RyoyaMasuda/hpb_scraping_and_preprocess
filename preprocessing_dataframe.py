@@ -335,23 +335,36 @@ def preprocess_dataframe(path: Path) -> None:
         df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p.sub('', x))
 
         # 次にカタカナを消す。
-        p = re.compile('[\u30A1-\u30FF]+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p.sub('', x))
+        p2 = re.compile('[\u30A1-\u30FF]+')
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p2.sub('', x))
         
         # 漢字を消す
-        p = regex.compile(r'\p{Script_Extensions=Han}+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p.sub('', x))
+        p3 = regex.compile(r'\p{Script_Extensions=Han}+')
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p3.sub('', x))
 
         df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].str.replace(',', '').str.replace('，', '')
 
-        p = re.compile('[a-zA-Z]+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p.sub('', x))
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: x[-5:])
-
-        p = re.compile('[^0-9]+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p.sub('', x))
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: delete_not_payment_data(x))
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].astype(pd.Int64Dtype())
+        p4 = re.compile('[a-zA-Z]+')
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p4.sub('', x))
+        
+        # \はダメなのでけす
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].str.replace('\\', '', regex=True)
+        
+        p5 = re.compile('[^0-9]+')
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p5.split(x))
+        
+        # ４桁未満を削除する
+        _list_for_Series=[]
+        for _list in df['選択されたクーポン_編集']:
+            _tmp_list=[]
+            for row in _list:
+                if len(row) >= 4:
+                    _tmp_list.append(row)
+            _list_for_Series.append(_tmp_list)
+        _list_for_Series
+        
+        df['選択されたクーポン_編集'] = _list_for_Series
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: int(x[-1]))
 
         df.rename(columns={'選択されたクーポン_編集':'支出金額'}, inplace=True)
 
@@ -397,12 +410,6 @@ def illumina_use_judge(df, column):
     df.loc[df[column].str.contains('Illumina'), 'イルミナメニュー化の有無'] = 1
     df.loc[df[column].str.contains('ｉｌｌｕｍｉｎａ'), 'イルミナメニュー化の有無'] = 1
     df.loc[df[column].str.contains('Ｉｌｌｕｍｉｎａ'), 'イルミナメニュー化の有無'] = 1
-
-def delete_not_payment_data(x):
-    if len(x) < 4:
-        return pd.NA
-    else:
-        return int(x)
 
 def aujua_use_judge(df, column):
     df.loc[df[column].str.contains('オージュア'), 'Aujuaメニュー化の有無'] = 1
