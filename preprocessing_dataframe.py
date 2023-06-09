@@ -328,30 +328,27 @@ def preprocess_dataframe(path: Path) -> None:
                 df.loc[df['サロン名']==salon_name, 'Aujuaメニュー化の有無'] = 1
 
         df['選択されたクーポン_編集'] = df['選択されたクーポン'].apply(lambda x: mojimoji.zen_to_han(x, kana=False))
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].str.replace('　', '').str.replace(' ', '')
-
-        # ひらがな消す。
-        p = re.compile('[\u3041-\u309F]+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p.sub('', x))
-
-        # 次にカタカナを消す。
-        p2 = re.compile('[\u30A1-\u30FF]+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p2.sub('', x))
-        
-        # 漢字を消す
-        p3 = regex.compile(r'\p{Script_Extensions=Han}+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p3.sub('', x))
 
         df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].str.replace(',', '').str.replace('，', '')
-
-        p4 = re.compile('[a-zA-Z]+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p4.sub('', x))
         
         # \はダメなのでけす
         df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].str.replace('\\', '', regex=True)
         
-        p5 = re.compile('[^0-9]+')
-        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p5.split(x))
+        ## 電話番号を消す。
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: re.sub(r'\d{3,4}-\d{2,3}-\d{4}', '', x))
+        # ハイフンがない時
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: re.sub(r'\d{10}', '', x))
+        #携帯電話
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: re.sub(r'0[789]0-\d{4}-\d{4}', '', x))
+        # ip電話
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: re.sub(r'050-\d{4}-\d{4}', '', x))
+        # フリーダイヤル
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: re.sub(r'0120-\d{3}-\d{3}', '', x))
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: re.sub(r'0120-\d{6}', '', x))
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: re.sub(r'0800-\d{3}-\d{3}', '', x))
+        
+        p = re.compile('[^0-9]+')
+        df['選択されたクーポン_編集'] = df['選択されたクーポン_編集'].apply(lambda x: p.split(x))
         
         # ４桁未満を削除する
         _list_for_Series=[]
@@ -360,6 +357,8 @@ def preprocess_dataframe(path: Path) -> None:
             for row in _list:
                 if len(row) >= 4:
                     _tmp_list.append(row)
+            if _tmp_list==[]:
+                _tmp_list = ['0']
             _list_for_Series.append(_tmp_list)
         _list_for_Series
         
