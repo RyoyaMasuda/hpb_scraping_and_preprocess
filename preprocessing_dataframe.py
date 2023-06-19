@@ -291,7 +291,7 @@ def preprocess_dataframe(path: Path) -> None:
         illumina_use_judge(df=df, column='2番人気クーポン名')
         illumina_use_judge(df=df, column='3番人気クーポン名')
 
-        for salon_name in df['サロン名']:
+        for salon_name in df['サロン名'].unique():
             if df[df['サロン名']==salon_name]['選択されたクーポン'].str.contains('イルミナ').sum():
                 df.loc[df['サロン名']==salon_name, 'イルミナメニュー化の有無'] = 1
             if df[df['サロン名']==salon_name]['選択されたクーポン'].str.contains('ILLUMINA').sum():
@@ -313,7 +313,7 @@ def preprocess_dataframe(path: Path) -> None:
         aujua_use_judge(df=df, column='2番人気クーポン名')
         aujua_use_judge(df=df, column='3番人気クーポン名')
 
-        for salon_name in df['サロン名']:
+        for salon_name in df['サロン名'].unique():
             if df[df['サロン名']==salon_name]['選択されたクーポン'].str.contains('オージュア').sum():
                 df.loc[df['サロン名']==salon_name, 'Aujuaメニュー化の有無'] = 1
             if df[df['サロン名']==salon_name]['選択されたクーポン'].str.contains('ｵｰｼﾞｭｱ').sum():
@@ -326,6 +326,26 @@ def preprocess_dataframe(path: Path) -> None:
                 df.loc[df['サロン名']==salon_name, 'Aujuaメニュー化の有無'] = 1
             if df[df['サロン名']==salon_name]['選択されたクーポン'].str.contains('Ａｕｊｕａ').sum():
                 df.loc[df['サロン名']==salon_name, 'Aujuaメニュー化の有無'] = 1
+
+        df['addicthyメニュー化の有無'] = 0
+        
+        addicthy_use_judge(df=df, column='1番人気クーポン名')
+        addicthy_use_judge(df=df, column='2番人気クーポン名')
+        addicthy_use_judge(df=df, column='3番人気クーポン名')
+
+        for salon_name in df['サロン名'].unique():
+            if df[df['サロン名']==salon_name]['選択されたクーポン'].str.contains('アディクシー|ｱﾃﾞｨｸｼｰ|Addicthy|Addicthy|ADDICTHY|addicthy|ａｄｄｉｃｔｈｙ|Ａｄｄｉｃｔｈｙ').sum():
+                df.loc[df['サロン名']==salon_name, 'addicthyメニュー化の有無'] = 1
+
+        df['inoaメニュー化の有無'] = 0
+        
+        inoa_use_judge(df=df, column='1番人気クーポン名')
+        inoa_use_judge(df=df, column='2番人気クーポン名')
+        inoa_use_judge(df=df, column='3番人気クーポン名')
+
+        for salon_name in df['サロン名'].unique():
+            if df[df['サロン名']==salon_name]['選択されたクーポン'].str.contains('イノア|ｲﾉｱ|Inoa|INOA|inoa|ｉｎｏａ|Ｉｎｏａ').sum():
+                df.loc[df['サロン名']==salon_name, 'inoaメニュー化の有無'] = 1
 
         df['選択されたクーポン_編集'] = df['選択されたクーポン'].apply(lambda x: mojimoji.zen_to_han(x, kana=False))
 
@@ -418,6 +438,11 @@ def aujua_use_judge(df, column):
     df.loc[df[column].str.contains('aujua'), 'Aujuaメニュー化の有無'] = 1
     df.loc[df[column].str.contains('ａｕｊｕａ'), 'Aujuaメニュー化の有無'] = 1
     df.loc[df[column].str.contains('Ａｕｊｕａ'), 'Aujuaメニュー化の有無'] = 1
+
+def addicthy_use_judge(df, column):
+    df.loc[df[column].str.contains('アディクシー|ｱﾃﾞｨｸｼｰ|Addicthy|Addicthy|ADDICTHY|addicthy|ａｄｄｉｃｔｈｙ|Ａｄｄｉｃｔｈｙ'), 'addicthyメニュー化の有無'] = 1
+def inoa_use_judge(df, column):
+    df.loc[df[column].str.contains('イノア|ｲﾉｱ|Inoa|INOA|inoa|ｉｎｏａ|Ｉｎｏａ'), 'inoaメニュー化の有無'] = 1
 
 def main():
     DIR_PATH = Path('/Users/masudaniwabinari/Desktop/hpb_scraping/data/完成')
